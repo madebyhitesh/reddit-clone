@@ -1,0 +1,11 @@
+*,*::after,*::before{
+    margin:0;
+    padding:0;
+    box-sizing: border-box;
+}
+
+.logout{
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+}
