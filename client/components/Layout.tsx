@@ -9,7 +9,7 @@ type Props = {
   title?: string
 }
 
-const Layout = ({ children, title = 'This is the default title' }: Props) => (
+const Layout = ({ children, title = 'Reddit' }: Props) => (
   <div>
     <Head>
       <title>{title}</title>
@@ -22,10 +22,6 @@ const Layout = ({ children, title = 'This is the default title' }: Props) => (
       </nav>
     </header>
     {children}
-    <footer>
-      <hr />
-      <span>I'm here to stay (Footer)</span>
-    </footer>
   </div>
 )
 

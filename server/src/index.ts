@@ -8,15 +8,9 @@ import mongoose from 'mongoose';
 import { COOKIE_NAME, DB_URL, SESSION_SECRET } from "./constants";
 import cors from "cors"
 import session from "express-session"
-import { MyContext } from "./@types/interfaces";
-
-
-
-
-
+import { PostResolver } from "./resolver/Post";
 
 async function main() {
-
     if (DB_URL)
         mongoose.connect(DB_URL, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
 
@@ -46,7 +40,7 @@ async function main() {
 
 
     const schema = await buildSchema({
-        resolvers: [UserResolver],
+        resolvers: [UserResolver, PostResolver],
         validate: false
     });
 

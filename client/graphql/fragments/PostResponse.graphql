@@ -1,0 +1,13 @@
+fragment PostResponse on PostResponse{
+    
+    message {
+      type
+      message
+    }
+    posts {
+      _id
+      title
+      creatorId
+      body
+    }
+}

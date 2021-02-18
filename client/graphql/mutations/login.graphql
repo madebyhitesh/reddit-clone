@@ -1,12 +1,10 @@
-mutation Login ($options:UsernamePasswordInput!){
+mutation Login($options:LoginInput!) {
   login(options:$options){
-    message{
-      message
-    }
-    user{
-      _id
-      username
-    }
-    token
+	message{
+    message
   }
-  }  
+    user{
+      ...UserResponse
+    }
+  }
+} 

@@ -1,14 +1,12 @@
 query Me
  {
  me {
-    
     message {
       type
       message
     }
     user {
-      _id
-      username
+    ...UserResponse
     }
   }
 }

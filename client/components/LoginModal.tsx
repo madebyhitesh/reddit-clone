@@ -1,3 +1,4 @@
+import Link from "next/link"
 import React, { useState } from "react"
 import { Modal, Form, Button, Alert } from "react-bootstrap"
 import { useLoginMutation } from "../generated/graphql"
@@ -23,8 +24,6 @@ const LoginModal: React.FC<IFormModal> = ({ isVisible, handleClose }) => {
                 const data = response.data?.login
                 console.log(data)
                 if (data?.user) {
-                    //if register is sucessfull set token received in localstorage
-                    localStorage.setItem("x-auth-token-redit", data.token!)
                     //clear the input feilds
                     setUsername("")
                     setPassword("")
@@ -45,29 +44,31 @@ const LoginModal: React.FC<IFormModal> = ({ isVisible, handleClose }) => {
 
 
     return (
-        <Modal show={isVisible} onHide={handleClose}>
-            <Modal.Header closeButton>
+        <Modal show={isVisible} onHide={handleClose} >
+            <Modal.Header closeButton className="bg-light-black text-light">
                 <Modal.Title>Login</Modal.Title>
             </Modal.Header>
-            <Modal.Body>
+            <Modal.Body className="bg-light-black text-light">
                 {errorMessage ? <Alert variant="danger">{errorMessage}</Alert> : null}
                 <Form className="w-100" onSubmit={handleSubmit}>
                     <Form.Group controlId="formBasicEmail">
                         <Form.Label>Username</Form.Label>
-                        <Form.Control type="text" placeholder="Enter username" value={username!} onChange={handleUsernameChange} required />
-                        <Form.Text className="text-muted">
-                            We'll never share your detials with anyone else.
-                    </Form.Text>
-                    </Form.Group>
+                        <Form.Control type="text"
+                            className="bg-black"
+                            placeholder="Enter username"
+                            value={username!}
+                            onChange={handleUsernameChange}
+                            required />
 
+                    </Form.Group>
                     <Form.Group controlId="formBasicPassword">
                         <Form.Label>Password</Form.Label>
-                        <Form.Control type="password" placeholder="Password" value={password!} onChange={handlePasswordChange} required />
+                        <Form.Control className="bg-black" type="password" placeholder="Password" value={password!} onChange={handlePasswordChange} required />
+                        <Form.Text as={Link} href="/forgot-password">
+                            Forgot Passoword?
+                    </Form.Text>
                     </Form.Group>
-                    <Form.Group controlId="formBasicCheckbox">
-                        <Form.Check type="checkbox" label="Check me out" />
-                    </Form.Group>
-                    <Button block variant="primary" type="submit">
+                    <Button block variant="danger" type="submit">
                         Login
                 </Button>
                 </Form>

@@ -9,3 +9,14 @@
     align-items: flex-end;
     justify-content: flex-end;
 }
+.bg-light-black{
+    background-color: rgb(26, 26, 29);
+}
+.bg-black{
+    background-color: rgb(19, 19, 19);
+}
+.close,
+.close:hover
+{
+    color:white;
+}

@@ -1,13 +1,13 @@
-import React, { useState } from 'react'
-
-import { Navbar, Nav, Button } from 'react-bootstrap'
+import { withUrqlClient } from 'next-urql';
+import React, { useState } from 'react';
+import { Button, Nav, Navbar } from 'react-bootstrap';
 import { useLogoutMutation, useMeQuery } from '../generated/graphql';
+import { createUrlClient } from '../utils/createUrqlClient';
 import LoginModal from './LoginModal';
 import RegisterModal from './RegisterModal';
 
-
-
 const NavBar = () => {
+
     const [, logout] = useLogoutMutation();
     const [{ fetching, data }] = useMeQuery();
     const [show, setShow] = useState<boolean>(false);
@@ -17,8 +17,9 @@ const NavBar = () => {
     const handleShow = () => setShow(true);
     const handleLoginClose = () => setLoginShow(false);
     const handleLoginShow = () => setLoginShow(true);
-    let body;
 
+    // changing the navbar based on user logged in or not
+    let body;
     if (fetching)
         body = null;
     else if (data?.me.user) {
@@ -39,7 +40,7 @@ const NavBar = () => {
 
     return (
         <>
-            <Navbar bg="dark" collapseOnSelect expand="lg" variant="dark">
+            <Navbar className="bg-black" collapseOnSelect expand="lg" variant="dark">
                 <Navbar.Brand href="/" ><h2 className="text-danger">Reddit</h2></Navbar.Brand>
                 <Navbar.Toggle aria-controls="responsive-navbar-nav" />
                 <Navbar.Collapse id="responsive-navbar-nav">
@@ -62,4 +63,4 @@ const NavBar = () => {
     )
 }
 
-export default NavBar
+export default withUrqlClient(createUrlClient, { ssr: false })(NavBar)

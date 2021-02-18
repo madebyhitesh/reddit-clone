@@ -1,9 +1,10 @@
-import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql"
+import { Arg, Ctx, Mutation, Query, Resolver } from "type-graphql"
 import { User, UserModal } from "../entity/User"
 import argon2 from "argon2"
 import jwt, { verify } from "jsonwebtoken"
-import { UserResponse, UsernamePasswordInput, Message, MyContext } from "../@types/interfaces"
-import { COOKIE_NAME, JWT_SECRET } from "../constants"
+import { UserResponse, RegisterInput, LoginInput, Message, MyContext } from "../@types/interfaces"
+import { JWT_SECRET } from "../constants"
+import { sendEmail } from "../utils/sendEmail"
 
 
 @Resolver()
@@ -42,16 +43,41 @@ export class UserResolver {
 
         }
     }
+    //mutation for forgot password
+    @Mutation(() => Boolean)
+    async forgotPassword(
+        @Arg("email") email: String
+    ): Promise<boolean> {
+
+        if (!email)
+            return false;
+        try {
+            const user = await UserModal.findOne({ email: email as string })
+            if (!user)
+                return false
+            const resetToken = jwt.sign({ _id: user?._id }, JWT_SECRET!, { expiresIn: "1h" });
+            if (!resetToken)
+                return false
+
+            const html = `<a href="http://localhost:3000/reset-password/${resetToken}">Reset Password</a>`
+            await sendEmail(email as string, html)
+            return true;
+        } catch (error) {
+            return false;
+        }
+
+
+    }
     // mutation to resgister a new user
     @Mutation(() => UserResponse)
     async register(
-        @Arg("options") options: UsernamePasswordInput,
+        @Arg("options") options: RegisterInput,
         @Ctx() { res, req }: MyContext
     ): Promise<UserResponse | undefined> {
 
-        const { username, password } = options;
+        const { username, password, email } = options;
         //check if arguments exists or not if not then return error
-        if (!username || !password)
+        if (!username || !password || !email)
             return {
                 message: {
                     type: "BAD REQUEST",
@@ -77,9 +103,10 @@ export class UserResolver {
 
             const newUser = new UserModal({
                 username: options.username,
-                password: hashPassword
+                password: hashPassword,
+                email
             })
-            const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET!)
+            const token = jwt.sign({ id: newUser._id }, JWT_SECRET!)
             if (!token)
                 return { message: { type: "TOKEN", message: "someting went wrong with generating token" } }
             else {
@@ -105,7 +132,7 @@ export class UserResolver {
     //mutation for loggin in the user
     @Mutation(() => UserResponse)
     async login(
-        @Arg("options") options: UsernamePasswordInput,
+        @Arg("options") options: LoginInput,
         @Ctx() { req }: MyContext
     ): Promise<UserResponse | undefined> {
 
@@ -139,7 +166,7 @@ export class UserResolver {
             else {
 
 
-                const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET!)
+                const token = jwt.sign({ _id: user._id }, JWT_SECRET!)
                 if (token)
                     req.session.token = token;
                 return {
@@ -197,36 +224,47 @@ export class UserResolver {
 
     }
     //mutaion of change the password of the user
-    @Mutation(() => Message)
-    async changePassword(
-        @Arg("options") options: UsernamePasswordInput
-    ): Promise<Message | undefined> {
+    @Mutation(() => UserResponse)
+    async resetPassword(
+        @Arg("newPassword") newPassword: string,
+        @Arg("token") token: string,
+        @Ctx() { req }: MyContext
+    ): Promise<UserResponse> {
 
-        const { username, password } = options
         //check if arguments exists or not if not then return error
-        if (!username || !password)
+        if (!token || !newPassword)
             return {
-                type: "BAD REQUEST",
-                message: "Username required"
+                message: {
+                    type: "BAD REQUEST",
+                    message: "Please fill the required feilds"
+                }
             }
 
 
         try {
+            //decode the token
+            const decode = jwt.verify(token, JWT_SECRET!) as User
             // find user using the username passed in arguments
-            const user = await UserModal.findOne({ username })
+            const user = await UserModal.findOne({ _id: decode._id })
+
             //if no user found return erorr
             if (!user)
                 return {
-                    type: "BAD REQUEST",
-                    message: "User doesn't exists"
+                    message: {
+                        type: "BAD REQUEST",
+                        message: "User doesn't exists"
+                    }
                 }
 
             // hash the password send in the args
-            const hashedPassword = await argon2.hash(password)
+            const hashedPassword = await argon2.hash(newPassword)
+
+            // new token to login
+            const newToken = jwt.sign({ _id: user._id }, JWT_SECRET!)
 
             // if password is not hashed properly return the error
             if (!hashedPassword)
-                return { type: "hash", message: "someting went wrong with hashing password" }
+                return { message: { type: "hash", message: "someting went wrong with hashing password" } }
 
             //set the current password to new password
             user.password = hashedPassword
@@ -234,16 +272,18 @@ export class UserResolver {
             user.updatedAt = new Date()
 
             await user.save()
+            req.session.token = newToken;
 
             return {
-                type: "Sucess",
-                message: "Password changed sucessfully"
+                user: [user]
             }
 
         } catch (error) {
             return {
-                type: "SERVER_ERROR",
-                message: "Something went wrong try again later"
+                message: {
+                    type: "SERVER_ERROR",
+                    message: "Something went wrong try again later"
+                }
             }
         }
 
