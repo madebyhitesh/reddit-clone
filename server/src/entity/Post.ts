@@ -2,6 +2,8 @@ import { getModelForClass, prop as Property, Ref } from "@typegoose/typegoose";
 import { Field, Int, ObjectType } from "type-graphql";
 import { User } from "./User";
 
+
+
 @ObjectType()
 export class Post {
 
@@ -13,12 +15,12 @@ export class Post {
     title?: string;
 
     @Field(() => String, { nullable: true })
-    @Property({ unique: true })
+    @Property()
     body?: string;
 
-    @Field(() => String)
-    @Property({ ref: () => User })
-    creatorId?: Ref<User>
+    @Field(() => User)
+    @Property({ ref: () => User, required: true })
+    creatorId!: Ref<User>
 
     @Field(() => Int)
     @Property({ default: 0 })

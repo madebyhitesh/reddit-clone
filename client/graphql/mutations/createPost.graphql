@@ -1,5 +1,5 @@
 mutation CreatePost ($options:InputCreatePost!){
   createPost(options: $options) {
-      ...PostResponse
+  ...PostResponse   
   }
 }

@@ -1,9 +1,21 @@
-import { CookieOptions } from "express"
-import { Cookie, Session, SessionData, SessionOptions } from "express-session"
+import { Session, SessionData } from "express-session"
 import { InputType, Field, ObjectType } from "type-graphql"
 import { Post } from "../entity/Post"
 import { User } from "../entity/User"
+import { ObjectId } from "mongodb"
+import { IPaginateResult } from "typegoose-cursor-pagination"
+import { Request, Response } from "express"
 
+
+
+// interface IPaginateResult<T> {
+//   hasNext: Boolean // hasNext is true if there is a next page
+//   hasPrevious: Boolean // hasPrevious is true if there is a previous page
+//   next: String // next is the cursor for the next page
+//   previous: String // previous is the cursor for the previous page
+//   totalDocs: Number // totalDocs is the total amount of docs for the query
+//   docs: T[] // docs are the resulting documents for this page
+// }
 
 //input for login the user
 @InputType()
@@ -23,6 +35,24 @@ export class InputCreatePost {
     @Field({ nullable: false })
     body?: string
 }
+// pagination 
+@InputType()
+export class InputPaginateOptions {
+    @Field()
+    limit?: number; // The page size. Set 0 for no limit.
+    @Field()
+    sortField?: string; // The field name to query the range for. The field must be:
+
+    @Field()
+    sortAscending?: boolean; // True to sort using paginatedField ascending (default is false - descending).
+    @Field({ nullable: true })
+    next?: string; // The value to start querying the page.
+    @Field({ nullable: true })
+    previous?: string; // The value to start querying previous page.
+}
+
+
+
 //input for registering  the user
 @InputType()
 export class RegisterInput {
@@ -64,8 +94,17 @@ export class PostResponse {
     posts?: Post[]
 
 }
+@ObjectType()
+export class PostResponsePaginated {
+    @Field(() => Message, { nullable: true })
+    message?: Message
+    @Field(() => [Post], { nullable: true })
+    posts?: IPaginateResult<Post>
+
+}
 
 export type MyContext = {
-    res: Express.Response & { clearCookie: Session };
-    req: Express.Request & { session: Session & Partial<SessionData> & { token?: string }; } & { userId: string }
+    res: Response;
+    req: Request & { userId: ObjectId | undefined };
+    // req: Request & { session: Session & Partial<SessionData> & { token?: string }; } & { userId: ObjectId }
 }

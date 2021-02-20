@@ -1,18 +1,20 @@
+import { useEffect, useState } from "react"
 import { useMeQuery } from "../generated/graphql"
 
 
 const useIsAuth = () => {
-    const [{ data, fetching }] = useMeQuery()
 
-    const isLogged = () => {
-        if (data?.me.user && !fetching) {
-            return true
-        } else
-            return false
-    }
+    const [{ data }] = useMeQuery()
+    const [isLoggedIn, setIsLoggedIn] = useState(false)
+    useEffect(() => {
+        if (!data?.me.user) {
+            setIsLoggedIn(false)
+        } else {
+            setIsLoggedIn(true)
+        }
+    }, [data])
 
-    return { isLogged }
-
+    return isLoggedIn
 }
 
 export default useIsAuth

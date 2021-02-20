@@ -1,16 +1,18 @@
-import "dotenv/config"
-import "reflect-metadata"
-import { ApolloServer } from 'apollo-server-express'
-import express from 'express'
-import { buildSchema } from "type-graphql";
-import { UserResolver } from "./resolver/User";
+import { ApolloServer } from 'apollo-server-express';
+import cookieParser from 'cookie-parser';
+import cors from "cors";
+import "dotenv/config";
+import express from 'express';
 import mongoose from 'mongoose';
-import { COOKIE_NAME, DB_URL, SESSION_SECRET } from "./constants";
-import cors from "cors"
-import session from "express-session"
+import "reflect-metadata";
+import { buildSchema } from "type-graphql";
+import { DB_URL } from "./constants";
 import { PostResolver } from "./resolver/Post";
+import { UserResolver } from "./resolver/User";
 
 async function main() {
+
+
     if (DB_URL)
         mongoose.connect(DB_URL, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
 
@@ -18,20 +20,13 @@ async function main() {
     db.on('error', (error) => console.error(error))
     db.once('open', () => console.log('----------Connected to Db---------'))
 
+    // PostModal.insertMany(data, (error, docs) => { console.log(error, docs) })
+
+    // // PostModal.deleteMany({}, (err) => console.log(err))
+
     const app = express()
 
-    app.use(session({
-        secret: SESSION_SECRET!,
-        name: COOKIE_NAME,
-        resave: false,
-        saveUninitialized: true,
-        cookie: {
-            secure: false,
-            httpOnly: true,
-            sameSite: "lax",
-            maxAge: 315569260000 // 10 years
-        }
-    }));
+    app.use(cookieParser())
 
     app.use(cors({
         origin: "http://localhost:3000",

@@ -1,11 +1,12 @@
 import { getModelForClass, prop as Property } from "@typegoose/typegoose";
 import { Field, ObjectType } from "type-graphql";
+import { ObjectId } from "mongodb"
 
 @ObjectType()
 export class User {
 
-    @Field()
-    readonly _id?: string
+    @Field(() => String)
+    readonly _id?: ObjectId
 
     @Field()
     @Property({ unique: true })
@@ -21,6 +22,10 @@ export class User {
     @Field(() => Date)
     @Property({ default: new Date() })
     createdAt?: Date
+
+    @Field()
+    @Property({ default: 0 })
+    count?: number
 
     @Field(() => Date)
     @Property({ default: new Date() })

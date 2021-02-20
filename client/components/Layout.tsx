@@ -10,19 +10,17 @@ type Props = {
 }
 
 const Layout = ({ children, title = 'Reddit' }: Props) => (
-  <div>
+  <>
     <Head>
       <title>{title}</title>
       <meta charSet="utf-8" />
       <meta name="viewport" content="initial-scale=1.0, width=device-width" />
     </Head>
-    <header>
-      <nav>
-        <NavBar />
-      </nav>
-    </header>
-    {children}
-  </div>
+    <NavBar pageProps />
+    <div>
+      {children}
+    </div>
+  </>
 )
 
 export default Layout

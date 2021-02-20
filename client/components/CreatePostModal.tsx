@@ -9,17 +9,25 @@ const CreatePostModal: React.FC<IFormModal> = ({ isVisible, handleClose }) => {
 
     const [title, setTitle] = useState<string>("")
     const [body, setBody] = useState<string>("")
-    const [errorMessage] = useState<string | null>("")
+    const [errorMessage, setErrorMessage] = useState<string | null>("")
     const handleTitleChange = (e: any) => setTitle(e.target.value)
     const handleBobyChange = (e: any) => setBody(e.target.value)
+
 
     const handleSubmit = async (e: any) => {
         e.preventDefault()
         //creting a post
-        await createPost({ options: { title, body } })
-        // clearing the input
-        setTitle("")
-        setBody("")
+        const data = await createPost({ options: { title, body } })
+        const error = data.data?.createPost.message?.message
+        if (error) {
+            setErrorMessage(error)
+        } else {
+            // clearing the input
+            setTitle("")
+            setBody("")
+            // closing the modal on success
+            handleClose()
+        }
     }
 
 

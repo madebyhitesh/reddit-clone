@@ -1,33 +1,29 @@
-import { Arg, Ctx, Mutation, Query, Resolver } from "type-graphql"
-import { User, UserModal } from "../entity/User"
 import argon2 from "argon2"
-import jwt, { verify } from "jsonwebtoken"
-import { UserResponse, RegisterInput, LoginInput, Message, MyContext } from "../@types/interfaces"
+import jwt from "jsonwebtoken"
+import { Arg, Ctx, Mutation, Query, Resolver, UseMiddleware } from "type-graphql"
+import { LoginInput, Message, MyContext, RegisterInput, UserResponse } from "../@types/interfaces"
 import { JWT_SECRET } from "../constants"
+import { User, UserModal } from "../entity/User"
+import { genreateTokens } from "../middleware/generateTokens"
+import { isAuth } from "../middleware/isAuth"
 import { sendEmail } from "../utils/sendEmail"
 
 
-@Resolver()
+@Resolver(User)
 export class UserResolver {
+
 
     // query to get all the users available
     @Query(() => UserResponse)
+    @UseMiddleware(isAuth)
     async me(
         @Ctx() { req }: MyContext
     ) {
+        const userId = req.userId;
+        if (userId) {
 
-        if (!req.session.token) {
-            {
-                return {
-                    message: {
-                        type: "Token Not Found",
-                        message: "Unauthorized"
-                    }
-                }
-            }
-        } else {
-            const data = verify(req.session.token, JWT_SECRET!) as User
-            const users = await UserModal.find({ _id: data._id })
+            const users = await UserModal.find({ _id: userId })
+
             if (users)
                 return {
                     user: users
@@ -39,11 +35,18 @@ export class UserResolver {
                     message: "No user found"
                 }
             }
+        } else {
 
-
+            return {
+                message: {
+                    type: "Token Not Found",
+                    message: "Unauthorized"
+                }
+            }
         }
     }
-    //mutation for forgot password
+
+
     @Mutation(() => Boolean)
     async forgotPassword(
         @Arg("email") email: String
@@ -111,7 +114,13 @@ export class UserResolver {
                 return { message: { type: "TOKEN", message: "someting went wrong with generating token" } }
             else {
                 await newUser.save()
-                req.session.token = token;
+
+                const { token, refreshToken } = genreateTokens(newUser)
+
+                if (token && refreshToken) {
+                    res.cookie("accessToken", token)
+                    res.cookie("refreshToken", refreshToken)
+                }
 
                 return {
                     user: [newUser]
@@ -133,7 +142,7 @@ export class UserResolver {
     @Mutation(() => UserResponse)
     async login(
         @Arg("options") options: LoginInput,
-        @Ctx() { req }: MyContext
+        @Ctx() { req, res }: MyContext
     ): Promise<UserResponse | undefined> {
 
         const { username, password } = options;
@@ -163,19 +172,25 @@ export class UserResolver {
             //if password is incorrect return the error
             if (!verify)
                 return { message: { type: "BAD REQUEST", message: "Incorrect Password" } }
-            else {
+
+            const { refreshToken, token } = genreateTokens(user)
 
 
-                const token = jwt.sign({ _id: user._id }, JWT_SECRET!)
-                if (token)
-                    req.session.token = token;
-                return {
-                    user: [user]
-                }
+            if (token)
+                res.cookie("accessToken", token)
 
+            if (refreshToken)
+                res.cookie("refreshToken", refreshToken)
+
+
+            //  req.session.token = token;
+            return {
+                user: [user]
             }
 
+
         } catch (error) {
+            console.log(error)
             return {
                 message: {
                     type: "SERVER_ERROR",
@@ -228,7 +243,7 @@ export class UserResolver {
     async resetPassword(
         @Arg("newPassword") newPassword: string,
         @Arg("token") token: string,
-        @Ctx() { req }: MyContext
+        @Ctx() { res }: MyContext
     ): Promise<UserResponse> {
 
         //check if arguments exists or not if not then return error
@@ -259,9 +274,6 @@ export class UserResolver {
             // hash the password send in the args
             const hashedPassword = await argon2.hash(newPassword)
 
-            // new token to login
-            const newToken = jwt.sign({ _id: user._id }, JWT_SECRET!)
-
             // if password is not hashed properly return the error
             if (!hashedPassword)
                 return { message: { type: "hash", message: "someting went wrong with hashing password" } }
@@ -272,7 +284,16 @@ export class UserResolver {
             user.updatedAt = new Date()
 
             await user.save()
-            req.session.token = newToken;
+
+            //login the user with fresh tokens
+            const { token: newToken, refreshToken } = genreateTokens(user)
+
+            if (newToken && refreshToken) {
+
+                res.cookie("accessToken", newToken)
+                res.cookie("refreshToken", refreshToken)
+            }
+
 
             return {
                 user: [user]
@@ -293,14 +314,16 @@ export class UserResolver {
     async logout(
         @Ctx() { req, res }: MyContext
     ) {
-        if (req.session) {
-            req.session.destroy(err => {
-                if (err) {
-                    return false
-                }
-            })
-            return true
-        }
+        res.clearCookie("accessToken")
+        res.clearCookie("refreshToken")
+        // if (req.session) {
+        //     req.session.destroy(err => {
+        //         if (err) {
+        //             return false
+        //         }
+        //     })
+        //     return true
+        // }
 
         return false
 

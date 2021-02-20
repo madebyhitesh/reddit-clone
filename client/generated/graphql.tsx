@@ -55,7 +55,7 @@ export type Post = {
   _id: Scalars['String'];
   title?: Maybe<Scalars['String']>;
   body?: Maybe<Scalars['String']>;
-  creatorId: Scalars['String'];
+  creatorId: User;
   points: Scalars['Int'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
@@ -126,7 +126,11 @@ export type PostResponseFragment = (
     & Pick<Message, 'type' | 'message'>
   )>, posts?: Maybe<Array<(
     { __typename?: 'Post' }
-    & Pick<Post, '_id' | 'title' | 'creatorId' | 'body'>
+    & Pick<Post, '_id' | 'title' | 'body'>
+    & { creatorId: (
+      { __typename?: 'User' }
+      & Pick<User, '_id' | 'username'>
+    ) }
   )>> }
 );
 
@@ -261,7 +265,10 @@ export const PostResponseFragmentDoc = gql`
   posts {
     _id
     title
-    creatorId
+    creatorId {
+      _id
+      username
+    }
     body
   }
 }

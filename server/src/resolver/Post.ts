@@ -1,6 +1,5 @@
-import { post } from "@typegoose/typegoose";
-import { Arg, Ctx, Mutation, Resolver, UseMiddleware, Query } from "type-graphql";
-import { InputCreatePost, MyContext, PostResponse } from "../@types/interfaces";
+import { Arg, Ctx, Mutation, Resolver, UseMiddleware, Query, Args } from "type-graphql";
+import { InputCreatePost, MyContext, PostResponse, } from "../@types/interfaces";
 import { PostModal } from "../entity/Post";
 import { isAuth } from "../middleware/isAuth";
 
@@ -8,11 +7,12 @@ import { isAuth } from "../middleware/isAuth";
 export class PostResolver {
     @Query(() => PostResponse)
     async getPost(
-
+        // @Arg("options") options: InputPaginateOptions,
     ): Promise<PostResponse> {
+
         try {
 
-            const posts = await PostModal.find({})
+            const posts = await PostModal.find({}).populate("creatorId").sort({ createdAt: -1 })
 
 
             if (!posts)
@@ -63,9 +63,14 @@ export class PostResolver {
                 creatorId: req.userId
             })
 
-            await newPost.save()
+            const savePost = await newPost.save()
+            const response = await savePost.populate("creatorId").execPopulate()
+            console.log(response)
+            // await newPost.save()
 
-            return { posts: [newPost] }
+            return {
+                posts: [response]
+            }
         } catch (error) {
 
             return {

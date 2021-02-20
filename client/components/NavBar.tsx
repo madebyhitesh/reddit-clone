@@ -6,7 +6,7 @@ import { createUrlClient } from '../utils/createUrqlClient';
 import LoginModal from './LoginModal';
 import RegisterModal from './RegisterModal';
 
-const NavBar = () => {
+const NavBar = ({ }) => {
 
     const [, logout] = useLogoutMutation();
     const [{ fetching, data }] = useMeQuery();
@@ -40,7 +40,7 @@ const NavBar = () => {
 
     return (
         <>
-            <Navbar className="bg-black" collapseOnSelect expand="lg" variant="dark">
+            <Navbar className="bg-black" collapseOnSelect expand="lg" variant="dark" sticky="top">
                 <Navbar.Brand href="/" ><h2 className="text-danger">Reddit</h2></Navbar.Brand>
                 <Navbar.Toggle aria-controls="responsive-navbar-nav" />
                 <Navbar.Collapse id="responsive-navbar-nav">
