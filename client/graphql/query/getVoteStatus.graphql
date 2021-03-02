@@ -1,0 +1,12 @@
+query GetVoteStatus($postId:String!){
+  getVoteStatus(postId:$postId){
+    message{
+       type
+      message
+    }
+		 vote{
+      _id
+    	vote
+    }
+  }
+}

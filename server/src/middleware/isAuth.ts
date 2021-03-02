@@ -15,13 +15,12 @@ export const isAuth: MiddlewareFn<MyContext> = async ({ context }, next) => {
         return next()
     }
 
-    if (accessToken) {
-        const decodeAccessToken = verify(accessToken, JWT_SECRET!) as User
-        if (decodeAccessToken) {
-            context.req.userId = decodeAccessToken._id
-            return next()
-        }
+    const decodeAccessToken = verify(accessToken, JWT_SECRET!) as User
+    if (decodeAccessToken) {
+        context.req.userId = decodeAccessToken._id
+        return next()
     }
+
 
     const decodeRefreshToken = verify(refreshToken, JWT_SECRET!) as any
     if (decodeRefreshToken) {

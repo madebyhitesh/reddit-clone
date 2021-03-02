@@ -1,0 +1,6 @@
+mutation Vote($vote:Int!,$postId:String!){
+  vote(vote:$vote,postId:$postId){
+    type
+    message
+  }
+}

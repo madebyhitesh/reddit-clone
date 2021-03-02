@@ -1,5 +1,5 @@
-query GetPosts {
-  getPost{
-      ...PostResponse
+query GetPosts ($cursor:DateTime){
+  getPost (cursor:$cursor){
+   ...PostResponse
   }
 }

@@ -7,10 +7,15 @@ fragment PostResponse on PostResponse{
     posts {
       _id
       title
+      hasVote
+      points
+      textSnippet
       creatorId{
         _id
         username
       }
       body
+       createdAt
+      updatedAt
     }
 }

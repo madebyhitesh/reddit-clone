@@ -1,0 +1,5 @@
+query GetSinglePost($id:String!){
+  getSinglePost(id: $id) {
+    ...PostResponse
+  }
+}

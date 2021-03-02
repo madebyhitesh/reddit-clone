@@ -1,0 +1,6 @@
+mutation UpdatePost($options:InputCreatePost!){
+updatePost(options:$options){
+  type
+  message
+}
+}

@@ -9,6 +9,8 @@ import { buildSchema } from "type-graphql";
 import { DB_URL } from "./constants";
 import { PostResolver } from "./resolver/Post";
 import { UserResolver } from "./resolver/User";
+import { VoteResolver } from './resolver/VoteResolver';
+import { getUserLoader } from './utils/getUserLoader';
 
 async function main() {
 
@@ -20,9 +22,7 @@ async function main() {
     db.on('error', (error) => console.error(error))
     db.once('open', () => console.log('----------Connected to Db---------'))
 
-    // PostModal.insertMany(data, (error, docs) => { console.log(error, docs) })
 
-    // // PostModal.deleteMany({}, (err) => console.log(err))
 
     const app = express()
 
@@ -33,23 +33,28 @@ async function main() {
         credentials: true
     }))
 
+    // PostModal.insertMany(data, (err, doc) => {
+    //     console.log("error", err)
+    //     console.log(doc)
+    // })
+    // PostModal.deleteMany()df
 
     const schema = await buildSchema({
-        resolvers: [UserResolver, PostResolver],
+        resolvers: [UserResolver, PostResolver, VoteResolver],
         validate: false
     });
 
 
     const server = new ApolloServer({
         schema,
-        context: ({ req, res }) => ({ req, res })
+        context: ({ req, res }) => ({ req, res, getUserLoader })
     })
 
 
     server.applyMiddleware({ app, cors: false })
 
 
-    app.listen(5000, () => console.log("-----server is running on port 5000------"))
+    app.listen(process.env.PORT || 5000, () => console.log("-----server is running on port 5000------"))
 }
 
 main().catch(err => console.error("errors", err))

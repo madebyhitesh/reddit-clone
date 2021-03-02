@@ -10,6 +10,9 @@ export class Post {
     @Field()
     readonly _id?: string
 
+    @Field(() => Int, { nullable: true })
+    hasVote?: number
+
     @Field(() => String, { nullable: true })
     @Property()
     title?: string;
@@ -17,6 +20,9 @@ export class Post {
     @Field(() => String, { nullable: true })
     @Property()
     body?: string;
+
+    @Field()
+    textSnippet?: string;
 
     @Field(() => User)
     @Property({ ref: () => User, required: true })

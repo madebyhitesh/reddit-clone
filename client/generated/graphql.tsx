@@ -18,14 +18,31 @@ export type Scalars = {
 
 export type Query = {
   __typename?: 'Query';
-  me: UserResponse;
   getPost: PostResponse;
+  getSinglePost: PostResponse;
+  me: UserResponse;
+  getVoteStatus: VoteStatusResponse;
 };
 
-export type UserResponse = {
-  __typename?: 'UserResponse';
+
+export type QueryGetPostArgs = {
+  cursor?: Maybe<Scalars['DateTime']>;
+};
+
+
+export type QueryGetSinglePostArgs = {
+  id: Scalars['String'];
+};
+
+
+export type QueryGetVoteStatusArgs = {
+  postId: Scalars['String'];
+};
+
+export type PostResponse = {
+  __typename?: 'PostResponse';
   message?: Maybe<Message>;
-  user?: Maybe<Array<User>>;
+  posts?: Maybe<Array<Post>>;
 };
 
 export type Message = {
@@ -34,42 +51,77 @@ export type Message = {
   message: Scalars['String'];
 };
 
-export type User = {
-  __typename?: 'User';
-  _id: Scalars['String'];
-  email: Scalars['String'];
-  username: Scalars['String'];
-  createdAt: Scalars['DateTime'];
-  updatedAt: Scalars['DateTime'];
-};
-
-
-export type PostResponse = {
-  __typename?: 'PostResponse';
-  message?: Maybe<Message>;
-  posts?: Maybe<Array<Post>>;
-};
-
 export type Post = {
   __typename?: 'Post';
   _id: Scalars['String'];
+  hasVote?: Maybe<Scalars['Int']>;
   title?: Maybe<Scalars['String']>;
   body?: Maybe<Scalars['String']>;
+  textSnippet: Scalars['String'];
   creatorId: User;
   points: Scalars['Int'];
   createdAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
 };
 
+export type User = {
+  __typename?: 'User';
+  _id: Scalars['String'];
+  email: Scalars['String'];
+  username: Scalars['String'];
+  createdAt: Scalars['DateTime'];
+  count: Scalars['Float'];
+  updatedAt: Scalars['DateTime'];
+};
+
+
+export type UserResponse = {
+  __typename?: 'UserResponse';
+  message?: Maybe<Message>;
+  user?: Maybe<Array<User>>;
+};
+
+export type VoteStatusResponse = {
+  __typename?: 'VoteStatusResponse';
+  message?: Maybe<Message>;
+  vote?: Maybe<Vote>;
+};
+
+export type Vote = {
+  __typename?: 'Vote';
+  _id: Scalars['String'];
+  userId: User;
+  postId: Post;
+  vote: Scalars['Float'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
+  createPost: PostResponse;
+  deletePost: Message;
+  updatePost: Message;
   forgotPassword: Scalars['Boolean'];
   register: UserResponse;
   login: UserResponse;
   deleteUser: Message;
   resetPassword: UserResponse;
   logout: Scalars['Boolean'];
-  createPost: PostResponse;
+  vote: Message;
+};
+
+
+export type MutationCreatePostArgs = {
+  options: InputCreatePost;
+};
+
+
+export type MutationDeletePostArgs = {
+  id: Scalars['String'];
+};
+
+
+export type MutationUpdatePostArgs = {
+  options: InputCreatePost;
 };
 
 
@@ -99,8 +151,15 @@ export type MutationResetPasswordArgs = {
 };
 
 
-export type MutationCreatePostArgs = {
-  options: InputCreatePost;
+export type MutationVoteArgs = {
+  vote: Scalars['Int'];
+  postId: Scalars['String'];
+};
+
+export type InputCreatePost = {
+  title: Scalars['String'];
+  body: Scalars['String'];
+  postId: Scalars['String'];
 };
 
 export type RegisterInput = {
@@ -114,11 +173,6 @@ export type LoginInput = {
   password: Scalars['String'];
 };
 
-export type InputCreatePost = {
-  title: Scalars['String'];
-  body: Scalars['String'];
-};
-
 export type PostResponseFragment = (
   { __typename?: 'PostResponse' }
   & { message?: Maybe<(
@@ -126,7 +180,7 @@ export type PostResponseFragment = (
     & Pick<Message, 'type' | 'message'>
   )>, posts?: Maybe<Array<(
     { __typename?: 'Post' }
-    & Pick<Post, '_id' | 'title' | 'body'>
+    & Pick<Post, '_id' | 'title' | 'hasVote' | 'points' | 'textSnippet' | 'body' | 'createdAt' | 'updatedAt'>
     & { creatorId: (
       { __typename?: 'User' }
       & Pick<User, '_id' | 'username'>
@@ -149,6 +203,19 @@ export type CreatePostMutation = (
   & { createPost: (
     { __typename?: 'PostResponse' }
     & PostResponseFragment
+  ) }
+);
+
+export type DeletePostMutationVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type DeletePostMutation = (
+  { __typename?: 'Mutation' }
+  & { deletePost: (
+    { __typename?: 'Message' }
+    & Pick<Message, 'type' | 'message'>
   ) }
 );
 
@@ -228,7 +295,36 @@ export type ResetPasswordMutation = (
   ) }
 );
 
-export type GetPostsQueryVariables = Exact<{ [key: string]: never; }>;
+export type UpdatePostMutationVariables = Exact<{
+  options: InputCreatePost;
+}>;
+
+
+export type UpdatePostMutation = (
+  { __typename?: 'Mutation' }
+  & { updatePost: (
+    { __typename?: 'Message' }
+    & Pick<Message, 'type' | 'message'>
+  ) }
+);
+
+export type VoteMutationVariables = Exact<{
+  vote: Scalars['Int'];
+  postId: Scalars['String'];
+}>;
+
+
+export type VoteMutation = (
+  { __typename?: 'Mutation' }
+  & { vote: (
+    { __typename?: 'Message' }
+    & Pick<Message, 'type' | 'message'>
+  ) }
+);
+
+export type GetPostsQueryVariables = Exact<{
+  cursor?: Maybe<Scalars['DateTime']>;
+}>;
 
 
 export type GetPostsQuery = (
@@ -236,6 +332,38 @@ export type GetPostsQuery = (
   & { getPost: (
     { __typename?: 'PostResponse' }
     & PostResponseFragment
+  ) }
+);
+
+export type GetSinglePostQueryVariables = Exact<{
+  id: Scalars['String'];
+}>;
+
+
+export type GetSinglePostQuery = (
+  { __typename?: 'Query' }
+  & { getSinglePost: (
+    { __typename?: 'PostResponse' }
+    & PostResponseFragment
+  ) }
+);
+
+export type GetVoteStatusQueryVariables = Exact<{
+  postId: Scalars['String'];
+}>;
+
+
+export type GetVoteStatusQuery = (
+  { __typename?: 'Query' }
+  & { getVoteStatus: (
+    { __typename?: 'VoteStatusResponse' }
+    & { message?: Maybe<(
+      { __typename?: 'Message' }
+      & Pick<Message, 'type' | 'message'>
+    )>, vote?: Maybe<(
+      { __typename?: 'Vote' }
+      & Pick<Vote, '_id' | 'vote'>
+    )> }
   ) }
 );
 
@@ -265,11 +393,16 @@ export const PostResponseFragmentDoc = gql`
   posts {
     _id
     title
+    hasVote
+    points
+    textSnippet
     creatorId {
       _id
       username
     }
     body
+    createdAt
+    updatedAt
   }
 }
     `;
@@ -290,6 +423,18 @@ export const CreatePostDocument = gql`
 
 export function useCreatePostMutation() {
   return Urql.useMutation<CreatePostMutation, CreatePostMutationVariables>(CreatePostDocument);
+};
+export const DeletePostDocument = gql`
+    mutation DeletePost($id: String!) {
+  deletePost(id: $id) {
+    type
+    message
+  }
+}
+    `;
+
+export function useDeletePostMutation() {
+  return Urql.useMutation<DeletePostMutation, DeletePostMutationVariables>(DeletePostDocument);
 };
 export const ForgotPasswordDocument = gql`
     mutation ForgotPassword($email: String!) {
@@ -357,9 +502,33 @@ export const ResetPasswordDocument = gql`
 export function useResetPasswordMutation() {
   return Urql.useMutation<ResetPasswordMutation, ResetPasswordMutationVariables>(ResetPasswordDocument);
 };
+export const UpdatePostDocument = gql`
+    mutation UpdatePost($options: InputCreatePost!) {
+  updatePost(options: $options) {
+    type
+    message
+  }
+}
+    `;
+
+export function useUpdatePostMutation() {
+  return Urql.useMutation<UpdatePostMutation, UpdatePostMutationVariables>(UpdatePostDocument);
+};
+export const VoteDocument = gql`
+    mutation Vote($vote: Int!, $postId: String!) {
+  vote(vote: $vote, postId: $postId) {
+    type
+    message
+  }
+}
+    `;
+
+export function useVoteMutation() {
+  return Urql.useMutation<VoteMutation, VoteMutationVariables>(VoteDocument);
+};
 export const GetPostsDocument = gql`
-    query GetPosts {
-  getPost {
+    query GetPosts($cursor: DateTime) {
+  getPost(cursor: $cursor) {
     ...PostResponse
   }
 }
@@ -367,6 +536,35 @@ export const GetPostsDocument = gql`
 
 export function useGetPostsQuery(options: Omit<Urql.UseQueryArgs<GetPostsQueryVariables>, 'query'> = {}) {
   return Urql.useQuery<GetPostsQuery>({ query: GetPostsDocument, ...options });
+};
+export const GetSinglePostDocument = gql`
+    query GetSinglePost($id: String!) {
+  getSinglePost(id: $id) {
+    ...PostResponse
+  }
+}
+    ${PostResponseFragmentDoc}`;
+
+export function useGetSinglePostQuery(options: Omit<Urql.UseQueryArgs<GetSinglePostQueryVariables>, 'query'> = {}) {
+  return Urql.useQuery<GetSinglePostQuery>({ query: GetSinglePostDocument, ...options });
+};
+export const GetVoteStatusDocument = gql`
+    query GetVoteStatus($postId: String!) {
+  getVoteStatus(postId: $postId) {
+    message {
+      type
+      message
+    }
+    vote {
+      _id
+      vote
+    }
+  }
+}
+    `;
+
+export function useGetVoteStatusQuery(options: Omit<Urql.UseQueryArgs<GetVoteStatusQueryVariables>, 'query'> = {}) {
+  return Urql.useQuery<GetVoteStatusQuery>({ query: GetVoteStatusDocument, ...options });
 };
 export const MeDocument = gql`
     query Me {

@@ -5,6 +5,9 @@ import { User } from "../entity/User"
 import { ObjectId } from "mongodb"
 import { IPaginateResult } from "typegoose-cursor-pagination"
 import { Request, Response } from "express"
+import { Vote } from "../entity/Votes"
+import DataLoader from "dataloader"
+import { getUserLoader } from "../utils/getUserLoader"
 
 
 
@@ -34,7 +37,11 @@ export class InputCreatePost {
 
     @Field({ nullable: false })
     body?: string
+
+    @Field({ nullable: false })
+    postId?: string
 }
+
 // pagination 
 @InputType()
 export class InputPaginateOptions {
@@ -95,6 +102,14 @@ export class PostResponse {
 
 }
 @ObjectType()
+export class VoteStatusResponse {
+    @Field(() => Message, { nullable: true })
+    message?: Message
+    @Field(() => Vote, { nullable: true })
+    vote?: Vote
+
+}
+@ObjectType()
 export class PostResponsePaginated {
     @Field(() => Message, { nullable: true })
     message?: Message
@@ -106,5 +121,6 @@ export class PostResponsePaginated {
 export type MyContext = {
     res: Response;
     req: Request & { userId: ObjectId | undefined };
+    getUserLoader: typeof getUserLoader
     // req: Request & { session: Session & Partial<SessionData> & { token?: string }; } & { userId: ObjectId }
 }
